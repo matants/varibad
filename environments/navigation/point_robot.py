@@ -1,6 +1,7 @@
 import numpy as np
 from gym import Env
 from gym import spaces
+import random
 
 
 class PointEnv(Env):
@@ -12,14 +13,15 @@ class PointEnv(Env):
      - reward is L2 distance
     """
 
-    def __init__(self, max_episode_steps=100):
+    def __init__(self, max_episode_steps=100, step_size=0.1):
         self.reset_task()
         self.observation_space = spaces.Box(low=-np.inf, high=np.inf, shape=(2,))
-        self.action_space = spaces.Box(low=-0.1, high=0.1, shape=(2,))
+        self.action_space = spaces.Box(low=-1., high=1., shape=(2,))
         self._max_episode_steps = max_episode_steps
+        self._step_size = step_size
 
     def sample_task(self):
-        goal = np.array([np.random.uniform(-1., 1.), np.random.uniform(-1., 1.)])
+        goal = np.array([random.random() * 2 - 1 for _ in range(2)])
         return goal
 
     def set_task(self, task):
@@ -35,7 +37,7 @@ class PointEnv(Env):
 
     def reset_model(self):
         # reset to a random location on the unit square
-        self._state = np.random.uniform(-1., 1., size=(2,))
+        self._state = np.array([random.random() * 2 - 1 for _ in range(2)])
         return self._get_obs()
 
     def reset(self):
@@ -45,7 +47,7 @@ class PointEnv(Env):
         return np.copy(self._state)
 
     def step(self, action):
-        self._state = self._state + action
+        self._state = self._state + action * self._step_size
         x, y = self._state.flat
         x -= self._goal[0]
         y -= self._goal[1]
@@ -65,8 +67,8 @@ class SparsePointEnv(PointEnv):
      the algorithm should call `sparsify_rewards()` to get the sparse rewards
      '''
 
-    def __init__(self, goal_radius=0.2, max_episode_steps=100):
-        super().__init__(max_episode_steps=max_episode_steps)
+    def __init__(self, goal_radius=0.2, max_episode_steps=100, step_size=0.1):
+        super().__init__(max_episode_steps=max_episode_steps, step_size=step_size)
         self.goal_radius = goal_radius
         self.reset_task()
 
@@ -99,8 +101,8 @@ class SparsePointEnv(PointEnv):
 
 
 class PointEnvOracle(PointEnv):
-    def __init__(self, max_episode_steps=100):
-        super().__init__(max_episode_steps=max_episode_steps)
+    def __init__(self, max_episode_steps=100, step_size=0.1):
+        super().__init__(max_episode_steps=max_episode_steps, step_size=step_size)
         self.observation_space = spaces.Box(low=-np.inf, high=np.inf, shape=(4,))
 
     def _get_obs(self):
@@ -108,8 +110,8 @@ class PointEnvOracle(PointEnv):
 
 
 class SparsePointEnvOracle(SparsePointEnv):
-    def __init__(self, max_episode_steps=100):
-        super().__init__(max_episode_steps=max_episode_steps)
+    def __init__(self, goal_radius=0.2, max_episode_steps=100, step_size=0.1):
+        super().__init__(max_episode_steps=max_episode_steps, goal_radius=goal_radius, step_size=step_size)
         self.observation_space = spaces.Box(low=-np.inf, high=np.inf, shape=(4,))
 
     def _get_obs(self):
