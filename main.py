@@ -20,10 +20,10 @@ from learner import Learner
 from metalearner import MetaLearner
 
 
-def main():
+def main(args_to_parse: list = []):
     parser = argparse.ArgumentParser()
-    parser.add_argument('--env-type', default='ant_dir_rl2')
-    args, rest_args = parser.parse_known_args()
+    parser.add_argument('--env-type', default='gridworld_varibad')
+    args, rest_args = parser.parse_known_args(args_to_parse)
     env = args.env_type
 
     # --- GridWorld ---
@@ -120,4 +120,4 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    main(['--num_processes', '1'])
